@@ -6,9 +6,10 @@
  */
 
 #include <ros/ros.h>
-
-
+#include "darknet_ros_msgs/BoundingBox.h"
+#include "darknet_ros_msgs/BoundingBoxes.h"
 #include "robocup_msgs/Entity.h"
+#include "robocup_msgs/EntityList.h"
 #include "robocup_msgs/Entity2D.h"
 #include "sensor_msgs/PointCloud2.h"
 #include "convert_2d_to_3d/get3Dfrom2D.h"
@@ -25,8 +26,8 @@
 
 // Publisher used to send evidence to world model
 ros::Publisher pub_3D;
-ros::Publisher object_marker_pub;
-ros::Subscriber sub_2D;
+ros::Publisher object_marker_pub,object_entity_pub;
+ros::Subscriber sub_registered_darknetBoxes;
 ros::Subscriber sub_registered_pcl;
 //tf::TransformListener listener;
 
@@ -34,6 +35,7 @@ sensor_msgs::PointCloud2 current_pcl;
 
 pcl::PointCloud<pcl::PointXYZ> point_pcl;
 sensor_msgs::PointCloud2::ConstPtr current_cloud;
+
 int height;
 std::string FRAME_ID="";
 
@@ -46,11 +48,7 @@ bool display_marker=true;
 */
 
 
-void get2DEntityCallback(const robocup_msgs::Entity2D::ConstPtr& msg){
-	//FIXME TODO
-	//ADD EVIDENCE ACCORDING WIRE FORMAT
 
-}
 
 void getPclCallback(const sensor_msgs::PointCloud2::ConstPtr& cloud){
 
@@ -63,7 +61,7 @@ height=cloud->height;
 
 current_cloud=cloud;
 //std::cout << "(x,y,z) = " << point_pcl.at(pcl_index) << std::endl;
-
+ROS_INFO("--> GET PCL");
 }
 
 
@@ -159,6 +157,62 @@ bool convert2dto3dCallback(convert_2d_to_3d::get3Dfrom2D::Request  &req,
 	return true;
 }
 
+void getDarkNetBoxesCallback(const darknet_ros_msgs::BoundingBoxes::ConstPtr& msg){
+	robocup_msgs::EntityList currentEntityList;
+	
+	ROS_INFO("--> in   getDarkNetBoxesCallback");
+	try{
+		for(int i=0;i<msg->bounding_boxes.size();i++){
+			robocup_msgs::Entity currentEntity;
+			//ROS_INFO("--> in LOOP  getDarkNetBoxesCallback");
+			darknet_ros_msgs::BoundingBox bounding_box=msg->bounding_boxes[i];
+			currentEntity.label=bounding_box.Class;
+			//ROS_INFO("--> after Class  getDarkNetBoxesCallback");
+			geometry_msgs::Pose currentPose;
+			int rgb_w=(bounding_box.xmin + bounding_box.xmax) / 2;
+			int rgb_h=(bounding_box.ymin + bounding_box.ymax) / 2;
+			//ROS_INFO("--> after ymin  getDarkNetBoxesCallback");
+			//process 2d ->3d
+			std::string frame_id=msg->header.frame_id;
+			int pcl_index;
+			pcl::PointXYZ point;
+			pcl_index = ( (rgb_w*current_cloud->width) + rgb_h);
+			//ROS_INFO("--> before fromROSMsg  getDarkNetBoxesCallback");
+			pcl::fromROSMsg(*current_cloud,point_pcl);
+			//ROS_INFO("--> after fromROSMsg  getDarkNetBoxesCallback");
+			point =point_pcl.at(pcl_index);
+			if(isnan(point.x) || isnan(point.y) || isnan(point.z)){
+					ROS_WARN("ISNAN value x:%f,y:%f,z:%f",point.x,point.y,point.z);
+			}
+
+
+			if(isinf(point.x) || isinf(point.y) || isinf(point.z)){
+					ROS_WARN("ISINF value x:%f,y:%f,z:%f",point.x,point.y,point.z);
+			}
+
+			currentPose.position.x=point.x;
+			currentPose.position.y=point.y;
+			currentPose.position.z=point.z;
+			currentEntity.pose=currentPose;
+
+			currentEntityList.entityList.push_back(currentEntity);
+			//ROS_INFO("--> before display_marker  getDarkNetBoxesCallback");
+			if(display_marker){
+				visualization_msgs::MarkerArray m_array;
+				int id=std::rand();
+				addMarker(m_array,point.x,point.y,point.z,"test","/CameraTop_optical_frame",id);
+				object_marker_pub.publish(m_array);
+			}
+		}
+
+		// PUBLISH DATA
+		object_entity_pub.publish(currentEntityList);
+
+	} catch (...) {
+		ROS_WARN("Exception...");
+    	return ;
+	}
+}
 
 
 /**
@@ -178,7 +232,9 @@ int main(int argc, char **argv) {
 
 	// Publisher
 	object_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/objet_pose_registred_pub", 100);
-	sub_registered_pcl=nh.subscribe("/camera/depth_registered/points", 100, getPclCallback);
+	object_entity_pub = nh.advertise<robocup_msgs::EntityList>("/objects/entity", 1);
+	sub_registered_pcl=nh.subscribe("/pepper_robot/camera/depth_registered/points", 1, getPclCallback);
+	sub_registered_darknetBoxes=nh.subscribe("/darknet_ros/bounding_boxes", 1, getDarkNetBoxesCallback);
 	ros::ServiceServer service = nh.advertiseService("convert_2d_to_3d", convert2dto3dCallback);
    	ROS_INFO("Ready to convert rgb coord to pcl 3d point.");
     ros::spin();

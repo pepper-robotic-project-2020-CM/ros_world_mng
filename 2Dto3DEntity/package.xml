@@ -19,6 +19,8 @@
  <build_depend>visualization_msgs</build_depend>
   
  <build_depend>tf</build_depend>
+ <build_depend>darknet_ros_msgs</build_depend>
+ 
   
  <run_depend>tf</run_depend>
 
@@ -33,6 +35,7 @@
   <run_depend>robocup_msgs</run_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>rospy</run_depend>
+  <run_depend>darknet_ros_msgs</run_depend>
     
 </package>
 

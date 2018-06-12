@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   pcl_ros
   visualization_msgs
   tf
+  darknet_ros_msgs
 )
 
 
