@@ -2,7 +2,7 @@
 __author__ = 'jsaraydaryan'
 import rospy
 from rospy_message_converter import message_converter, json_message_converter
-from common_msgs.msg import InterestPoint #, Order, OrderInterest
+from robocup_msgs.msg import InterestPoint #, Order, OrderInterest
 from geometry_msgs.msg import Pose,PoseStamped
 from map_manager.srv import *
 
@@ -50,7 +50,7 @@ if __name__ == '__main__':
     #  rosrun map_manager MapManager.py _confPath:="/home/astrostudent/evers_ws/conf/ITs"
     #
     ####################
-    default_value="/home/astro/robocupathome_ws/map/interest-points/"
+    default_value="/home/astro/catkin_robocup2018/data/world_mng/interest_points/"
 
     rospy.init_node('map_tools_server')
     config_directory_param=rospy.get_param("~confPath",default_value)

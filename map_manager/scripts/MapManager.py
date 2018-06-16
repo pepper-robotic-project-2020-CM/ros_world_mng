@@ -141,7 +141,7 @@ class Mm:
             #     json_str = f.read()
             #     orient = json_message_converter.convert_json_to_ros_message('robot_common_msg/InterestPoint', json_str)
             #     #save the orient to the dictionary (in memory)
-            #     self._mapOrient_Position[str(orient.label)] = orient
+            #     self._mapOrient_Prospy_message_converterosition[str(orient.label)] = orient
             #     f.close()
 
         # Display current map
@@ -194,7 +194,7 @@ if __name__ == '__main__':
     #  rosrun map_manager MapManager.py _confPath:="/home/astrostudent/evers_ws/conf/ITs"
     #
     ####################
-    default_value="/home/jsaraydaryan/ros_robotcupathome_ws/src/data/world_management/interest-points/"
+    default_value="/home/astro/catkin_robocup2018/data/world_mng/interest_points/"
 
     rospy.init_node('map_management_server')
     config_directory_param=rospy.get_param("~confPath",default_value)
