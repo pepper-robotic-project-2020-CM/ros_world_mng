@@ -48,18 +48,18 @@ Location of the config folder where interest points are loaded and saved
 MapTools.py is tools allowing to save interest point from rviz using the "2D Nav Goal" rviz tool.
 
 ### 5.2 How to use
-start the MapTools.py node
+Start the MapTools.py node
 
 ```
 rosrun map_manager MapTools.py _confPath:="/tmp/ITs"
 
 ```
 
-publish a already created map
+Publish an already created map
 
 
 ```
-rosrun map_server map_server myMap.yaml"
+rosrun map_server map_server myMap.yaml
 
 ```
 
@@ -70,7 +70,7 @@ rviz
 
 ```
 
-Add the map topic
+Add the map topic and
 use the "2D Nav Goal" rviz tool to defined Interest points
 
 
