@@ -158,16 +158,18 @@ class Mm:
     ####
     def activeTFProvider(self,req):
         if(req.isActivated and self._tfPublisherRunning):
-            return
+            pass
         elif (not req.isActivated and self._tfPublisherRunning):
             self._tfPublisherRunning=False
-            return
+            # TODO : Would need to kill thread here.
+            pass
         elif ( req.isActivated and not self._tfPublisherRunning):
             self._tfPublisherRunning=True
             thread.start_new_thread(self.publishInterestPointTf,())
-            return
+            pass
         if(not req.isActivated and not self._tfPublisherRunning):
-            return
+            pass
+        return []  # TODO Send more meaningful return value back
 
     ####
     #  Publishing current interest points TF (positions) and reload every 2s interest points from files
