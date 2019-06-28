@@ -34,13 +34,14 @@ class Mm:
     _getOrient_service = ""
     _activateTF_service = ""
     _tflistener = ""
-    _tfPublisherRunning=False
+    _tfPublisherRunning=True
+    _reloadItAfterPublishingTf = False
+    _broadcastTfPeriod = 2
 
     def __init__(self,conf_path):
         self.CONFIG_PATH=conf_path
 
         self.configure()
-        print
 
     ####
     #  Set the initial configuration of the current Node
@@ -55,6 +56,9 @@ class Mm:
         self._tflistener = TransformListener()
 
         self.loadInterestPoint()
+
+        #start publishing It Tf
+        thread.start_new_thread(self.publishInterestPointTf,())
 
         # spin() simply keeps python from exiting until this node is stopped
         rospy.spin()
@@ -158,23 +162,27 @@ class Mm:
     ####
     def activeTFProvider(self,req):
         if(req.isActivated and self._tfPublisherRunning):
-            return
+            rospy.loginfo('[MAP_MANAGER]: Keep tf broadcast enable')
+            return []
         elif (not req.isActivated and self._tfPublisherRunning):
             self._tfPublisherRunning=False
-            return
+            rospy.loginfo('[MAP_MANAGER]: Disable tf broadcast')
+            return []
         elif ( req.isActivated and not self._tfPublisherRunning):
             self._tfPublisherRunning=True
             thread.start_new_thread(self.publishInterestPointTf,())
-            return
+            rospy.loginfo('[MAP_MANAGER]: Start tf broadcast')
+            return []
         if(not req.isActivated and not self._tfPublisherRunning):
-            return
+            rospy.loginfo('[MAP_MANAGER]: Keep tf broadcast disable')
+            return []
 
     ####
     #  Publishing current interest points TF (positions) and reload every 2s interest points from files
     #  loop until self._tfPublisherRunning = False
     ####
     def publishInterestPointTf(self):
-        while(self._tfPublisherRunning):
+        while(self._tfPublisherRunning and not rospy.is_shutdown()):
             br = tf.TransformBroadcaster()
             for k, v in self._mapIP_Position.iteritems():
                 br.sendTransform((v.pose.position.x, v.pose.position.y, v.pose.position.z),
@@ -182,9 +190,11 @@ class Mm:
                                  rospy.Time.now(),
                                  str(k)+'_TF',
                                  "map")
-            time.sleep(2)
-            #reload configuration files
-            self.loadInterestPoint()
+            time.sleep(self._broadcastTfPeriod)
+
+            if self._reloadItAfterPublishingTf:
+                #reload configuration files
+                self.loadInterestPoint()
 
 if __name__ == '__main__':
 
