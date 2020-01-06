@@ -23,13 +23,21 @@ class Mt:
     #  Set the initial configuration of the current Node
     ####
     def configure(self):
-        self._simpleGoal_sub=rospy.Subscriber("/move_base_simple/goal", PoseStamped, self.simpleGoalcallback)
+        self._simpleGoal_sub = rospy.Subscriber("/move_base_simple/goal", PoseStamped, self.simpleGoalcallback)
+        self._doorGoal_sub = rospy.Subscriber("/door_goal", PoseStamped, self.doorGoalcallback)
         # spin() simply keeps python from exiting until this node is stopped
         rospy.spin()
 
-    def simpleGoalcallback(self,data):
+    def simpleGoalcallback(self, data):
+        self.saveInterestPoint(data)
+
+    def doorGoalcallback(self, data):
+        self.saveInterestPoint(data, type="door_goal")
+
+    def saveInterestPoint(self, data, type="simple_goal"):
         itPoint = InterestPoint()
         itPoint.label = "It"+str(self._index_label)
+        itPoint.type = type
         self._index_label+=1
         itPoint.pose = data.pose
         itPoint.arm_position = 0
@@ -39,7 +47,6 @@ class Mt:
         f.write(json_str)
         f.close()
         rospy.loginfo('Successfully saved the interestPoint:' + str(json_str))
-
 
 
 if __name__ == '__main__':
