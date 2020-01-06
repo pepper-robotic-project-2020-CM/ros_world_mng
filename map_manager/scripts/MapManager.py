@@ -21,7 +21,7 @@ import os
 
 
 class Mm:
-    
+
     # CONFIG_PATH="/home/astro/ros_ws/src/laptop-youbot/cpe_robotcup/config/interest-points/"
     CONFIG_PATH=""
     _mapIP_Position = {}
@@ -204,7 +204,7 @@ if __name__ == '__main__':
     #  rosrun map_manager MapManager.py _confPath:="/home/astrostudent/evers_ws/conf/ITs"
     #
     ####################
-    default_value="/home/xia0ben/pepper_ws/data/world_mng/interest_points/"
+    default_value="/home/nao/interest_points/"
 
     rospy.init_node('map_management_server')
     config_directory_param=rospy.get_param("~confPath",default_value)
