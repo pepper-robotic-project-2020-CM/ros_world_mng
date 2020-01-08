@@ -2,7 +2,7 @@
 __author__ = 'jsaraydaryan'
 import rospy
 from rospy_message_converter import message_converter, json_message_converter
-from robocup_msgs.msg import InterestPoint #, Order, OrderInterest
+from robocup_msgs.msg import InterestPoint, gm_bus_msg #, Order, OrderInterest
 from geometry_msgs.msg import Pose,PoseStamped
 from map_manager.srv import *
 
@@ -24,6 +24,8 @@ class Mt:
     ####
     def configure(self):
         self._simpleGoal_sub = rospy.Subscriber("/move_base_simple/goal", PoseStamped, self.simpleGoalcallback)
+        self._simpleGoal_pub = rospy.Publisher("/move_base_simple/goal", PoseStamped, queue_size=1)
+        self._buscommand_pub = rospy.Publisher("gm_bus_command", gm_bus_msg, queue_size=1)
         self._doorGoal_sub = rospy.Subscriber("/door_goal", PoseStamped, self.doorGoalcallback)
         # spin() simply keeps python from exiting until this node is stopped
         rospy.spin()
@@ -33,6 +35,13 @@ class Mt:
 
     def doorGoalcallback(self, data):
         self.saveInterestPoint(data, type="door_goal")
+        self._simpleGoal_pub.publish(data)
+        bus_command_msg = GmBusMsg()
+        bus_command_msg.action = 'NP'
+        bus_command_msg.action_id = '1'
+        bus_command_msg.payload = 'A_sim'
+        bus_command_msg.result = 0
+        self._buscommand_pub.publish(bus_command_msg)
 
     def saveInterestPoint(self, data, type="simple_goal"):
         itPoint = InterestPoint()
