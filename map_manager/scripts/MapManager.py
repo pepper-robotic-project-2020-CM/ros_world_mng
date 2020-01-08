@@ -2,7 +2,7 @@
 __author__ = 'jsaraydaryan'
 import rospy
 from rospy_message_converter import message_converter, json_message_converter
-from robocup_msgs.msg import InterestPoint #, Order, OrderInterest
+from robocup_msgs.msg import InterestPoint, InterestPoints #, Order, OrderInterest
 from geometry_msgs.msg import Pose
 from std_srvs.srv import Empty
 from map_manager.srv import *
@@ -52,6 +52,9 @@ class Mm:
         self._getPoint_service = rospy.Service('get_InterestPoint', getitP_service, self.getInterestPoint)
         self._saveitPBaseLink_service = rospy.Service('save_BaseLinkInterestPoint', saveitP_base_link_service, self.saveBaseLinkInterestPoint)
         self._activateTF_service = rospy.Service('activate_InterestPointTF', activateTF_service, self.activeTFProvider)
+
+        self._interestPointPublisher = rospy.Publisher('/interest_points',
+                                              InterestPoints)
 
         self._tflistener = TransformListener()
 
@@ -183,6 +186,7 @@ class Mm:
     ####
     def publishInterestPointTf(self):
         while(self._tfPublisherRunning and not rospy.is_shutdown()):
+            self._interestPointPublisher.publish(self._mapIP_Position.values())
             br = tf.TransformBroadcaster()
             for k, v in self._mapIP_Position.iteritems():
                 br.sendTransform((v.pose.position.x, v.pose.position.y, v.pose.position.z),
